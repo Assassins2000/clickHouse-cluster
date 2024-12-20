@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: zookeeper:3.8.0-temurin
+    environment:
+        - ALLOW_ANONYMOUS_LOGIN=yes
+  clickhouse1:
+    depends_on:
+      - "zookeeper"
+      - "kafka"
+    image: yandex/clickhouse-server:21.3.20.1
+    ports:
+      - "8123:8123"
+      - "9000:9000"      
+    volumes:
+      - ./clickhouse-config.xml:/etc/clickhouse-server/conf.d/config.xml      
+  clickhouse2:
+    depends_on:
+      - "zookeeper"
+      - "kafka"
+    image: yandex/clickhouse-server:21.3.20.1
+    ports:
+      - "8124:8123"
+      - "9001:9000"
+    volumes:
+      - ./clickhouse-config2.xml:/etc/clickhouse-server/conf.d/config.xml
+  kafka:
+    depends_on:
+      - "zookeeper"
+    image: bitnami/kafka:3.3.1-debian-11-r32
+    environment:
+    - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+    - ALLOW_PLAINTEXT_LISTENER=yes
+    - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+    - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
